@@ -1,0 +1,257 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-primary fw-bold"><i class="bi bi-cart-check"></i> KHÁCH ĐANG Ở SỬ DỤNG DỊCH VỤ</h3>
+    <button class="btn btn-success fw-bold" onclick="moModalAddBatchDV()"><i class="bi bi-cart-plus-fill"></i> Thêm Dịch Vụ Cho Khách Hàng</button>
+</div>
+
+<!-- Lọc Tìm Kiếm Có Nút Đỏ Clear x -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="/hientai-sudung-dv" class="row g-2 align-items-center">
+            <div class="col-md-9 position-relative">
+                <input type="text" id="kw_dv_input" name="kw" class="form-control pe-5" placeholder="Gõ tìm kiếm Tên khách, CCCD, Mã phòng, Tên dịch vụ..." value="{{ kw }}">
+                {% if kw %}
+                <button type="button" class="btn btn-danger btn-sm position-absolute top-50 end-0 translate-middle-y me-2 rounded-circle" style="width: 26px; height: 26px; padding: 0;" onclick="clearSearch('kw_dv_input', '/hientai-sudung-dv')">✕</button>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-search"></i> Lọc Tìm Kiếm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white fw-bold">📋 Danh Sách Dịch Vụ Khách Đang Ở Đã Sử Dụng</div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Ngày Dùng</th>
+                    <th>Mã Khách (CCCD)</th>
+                    <th>Tên Khách Hàng</th>
+                    <th>Phòng</th>
+                    <th>Dịch Vụ Sử Dụng</th>
+                    <th class="text-center">Số Lượng</th>
+                    <th>Đơn Giá</th>
+                    <th>Thành Tiền</th>
+                    <th>Hành Động (CRUD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sd in ds_dv %}
+                <tr>
+                    <td>{{ sd.ngay_su_dung }}</td>
+                    <td>{{ sd.cccd }}</td>
+                    <td>{{ sd.ten_khach }}</td>
+                    <td><span class="badge bg-secondary">{{ sd.ma_phong }}</span></td>
+                    <td>{{ sd.ten_dv }}</td>
+                    <td class="fw-bold text-center">{{ sd.so_luong }}</td>
+                    <td class="text-center">{{ "{:,.0f}".format(sd.gia_dv) }} VNĐ</td>
+                    <td class="text-danger fw-bold text-center">{{ "{:,.0f}".format(sd.tinh_thanh_tien()) }} VNĐ</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning text-white me-1" 
+                                onclick="moModalSuaSoLuong('{{ sd.cccd }}', '{{ sd.ten_khach }}', '{{ sd.ma_phong }}', '{{ sd.ma_dv }}', '{{ sd.ten_dv }}', '{{ sd.ngay_su_dung }}', '{{ sd.so_luong }}')">
+                            <i class="bi bi-pencil-square"></i> Sửa
+                        </button>
+                        <form action="/su-dung-dich-vu/xoa" method="POST" style="display:inline;">
+                            <input type="hidden" name="cccd" value="{{ sd.cccd }}">
+                            <input type="hidden" name="ma_phong" value="{{ sd.ma_phong }}">
+                            <input type="hidden" name="ma_dv" value="{{ sd.ma_dv }}">
+                            <input type="hidden" name="ngay_su_dung" value="{{ sd.ngay_su_dung }}">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa dịch vụ này?')">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" class="py-3 text-muted">Chưa có dịch vụ phát sinh cho các phòng hiện tại.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pop-up Modal Thêm Nhiều Dịch Vụ - Có ô chọn Ngày Thực Hiện -->
+<div class="modal fade" id="modalBatchDV" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="bi bi-cart-plus"></i> Chọn Dịch Vụ Cho Khách Hàng</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 mb-3">
+            <div class="col-md-7">
+                <label class="form-label fw-bold">Chọn Phòng / Khách Hàng Đang Ở</label>
+                <select id="batch_ma_phong" class="form-select fw-bold" required>
+                    <option value="">-- Chọn phòng đang ở --</option>
+                    {% for p in phong_da_thue %}
+                        <option value="{{ p.ma_phong }}">Phòng {{ p.ma_phong }} - {{ p.ten_phong }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- BỔ SUNG: Ô chọn ngày thực hiện dịch vụ -->
+            <div class="col-md-5">
+                <label class="form-label fw-bold">Ngày Thực Hiện Dịch Vụ</label>
+                <input type="date" id="batch_ngay_su_dung" class="form-control text-center fw-bold" value="{{ hom_nay }}" required>
+            </div>
+        </div>
+
+        <h6 class="fw-bold mt-4">Danh Sách Dịch Vụ Của Khách Sạn:</h6>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;">Chọn</th>
+                        <th>Tên Dịch Vụ</th>
+                        <th>Đơn Giá</th>
+                        <th style="width: 150px;">Số Lượng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dv in danh_sach_dv %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input dv-checkbox" value="{{ dv.ma_dv }}" style="width: 20px; height: 20px;">
+                        </td>
+                        <td class="text-start fw-bold">{{ dv.ten_dv }}</td>
+                        <td>{{ "{:,.0f}".format(dv.gia_dv) }} VNĐ</td>
+                        <td>
+                            <input type="number" class="form-control text-center dv-quantity" id="qty_{{ dv.ma_dv }}" value="1" min="1" disabled>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success fw-bold px-4" onclick="luuDichVuHangLoat()"><i class="bi bi-check-circle-fill"></i> Ghi Nhận Tất Cả Dịch Vụ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pop-up Sửa Số Lượng Dịch Vụ -->
+<div class="modal fade" id="modalSuaDV" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/su-dung-dich-vu/sua" method="POST">
+          <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title">Điều Chỉnh Số Lượng Dịch Vụ</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="cccd" id="edit_cccd">
+            <input type="hidden" name="ma_phong" id="edit_maphong">
+            <input type="hidden" name="ma_dv" id="edit_madv">
+            <input type="hidden" name="ngay_su_dung" id="edit_ngaysudung">
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Khách Hàng</label>
+                <input type="text" id="edit_tenkhach" class="form-control bg-light" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Phòng</label>
+                <input type="text" id="edit_maphong_show" class="form-control bg-light text-center" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Dịch Vụ</label>
+                <input type="text" id="edit_tendv" class="form-control bg-light" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold text-primary">Số Lượng Mới</label>
+                <input type="number" name="so_luong" id="edit_soluong" class="form-control text-center" min="1" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-warning fw-bold">Cập Nhật Số Lượng</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let modalBatchDV = new bootstrap.Modal(document.getElementById('modalBatchDV'));
+let modalSuaDV = new bootstrap.Modal(document.getElementById('modalSuaDV'));
+
+function moModalAddBatchDV() {
+    modalBatchDV.show();
+}
+
+document.querySelectorAll('.dv-checkbox').forEach(cb => {
+    cb.addEventListener('change', function() {
+        let qtyInput = document.getElementById('qty_' + this.value);
+        if(qtyInput) {
+            qtyInput.disabled = !this.checked;
+        }
+    });
+});
+
+function luuDichVuHangLoat() {
+    let maPhong = document.getElementById('batch_ma_phong').value;
+    let ngaySuDung = document.getElementById('batch_ngay_su_dung').value;
+
+    if(!maPhong) {
+        alert("Vui lòng chọn phòng đang có khách ở!");
+        return;
+    }
+    if(!ngaySuDung) {
+        alert("Vui lòng chọn ngày thực hiện dịch vụ!");
+        return;
+    }
+
+    let selectedList = [];
+    document.querySelectorAll('.dv-checkbox:checked').forEach(cb => {
+        let maDv = cb.value;
+        let qty = document.getElementById('qty_' + maDv).value;
+        selectedList.push({ ma_dv: maDv, so_luong: qty });
+    });
+
+    if(selectedList.length === 0) {
+        alert("Vui lòng chọn ít nhất 1 dịch vụ!");
+        return;
+    }
+
+    fetch('/su-dung-dich-vu/them-hang-loat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ ma_phong: maPhong, ngay_su_dung: ngaySuDung, dich_vu_list: selectedList })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === "success") {
+            alert("✅ " + res.message);
+            location.reload();
+        } else {
+            alert("❌ " + res.message);
+        }
+    });
+}
+
+function moModalSuaSoLuong(cccd, tenKhach, maPhong, maDv, tenDv, ngaySuDung, soLuong) {
+    document.getElementById("edit_cccd").value = cccd;
+    document.getElementById("edit_maphong").value = maPhong;
+    document.getElementById("edit_madv").value = maDv;
+    document.getElementById("edit_ngaysudung").value = ngaySuDung;
+
+    document.getElementById("edit_tenkhach").value = tenKhach + " (CCCD: " + cccd + ")";
+    document.getElementById("edit_maphong_show").value = maPhong;
+    document.getElementById("edit_tendv").value = tenDv;
+    document.getElementById("edit_soluong").value = soLuong;
+
+    modalSuaDV.show();
+}
+
+function clearSearch(inputId, redirectUrl) {
+    document.getElementById(inputId).value = "";
+    window.location.href = redirectUrl;
+}
+</script>
+{% endblock %}

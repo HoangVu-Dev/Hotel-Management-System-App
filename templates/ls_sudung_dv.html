@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="mb-4 text-primary fw-bold"><i class="bi bi-cart-check-fill"></i> LỊCH SỬ KHÁCH HÀNG SỬ DỤNG DỊCH VỤ</h3>
+
+<!-- Bộ Lọc Tìm Kiếm -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="/ls-sudung-dv" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" name="kw" class="form-control" placeholder="Tìm theo Tên khách, Số CCCD, Tên dịch vụ..." value="{{ kw }}">
+            </div>
+            <div class="col-md-4">
+                <input type="date" name="ngay" class="form-control" value="{{ ngay }}">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-search"></i> Lọc Lịch Sử Dịch Vụ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0 text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Ngày Dùng</th>
+                    <th>Mã Khách (CCCD)</th>
+                    <th>Tên Khách Hàng</th>
+                    <th>Phòng Phục Vụ</th>
+                    <th>Dịch Vụ Sử Dụng</th>
+                    <th>Số Lượng</th>
+                    <th>Đơn Giá</th>
+                    <th>Thành Tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sd in danh_sach %}
+                <tr>
+                    <td>{{ sd.ngay_su_dung }}</td>
+                    <td class="fw-bold">{{ sd.cccd }}</td>
+                    <td>{{ sd.ten_khach }}</td>
+                    <td><span class="badge bg-info text-dark">{{ sd.ma_phong }}</span></td>
+                    <td>{{ sd.ten_dv }}</td>
+                    <td>{{ sd.so_luong }}</td>
+                    <td>{{ "{:,.0f}".format(sd.gia_dv) }} VNĐ</td>
+                    <td class="text-danger fw-bold">{{ "{:,.0f}".format(sd.tinh_thanh_tien()) }} VNĐ</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="py-4 text-muted">Không tìm thấy lịch sử sử dụng dịch vụ.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Khách Sạn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Tối ưu hiệu ứng phát sáng cho nút đang active trên Navbar */
+        .nav-link.active-item {
+            background-color: #0d6efd !important;
+            color: #ffffff !important;
+            font-weight: bold !important;
+            border-radius: 6px;
+            box-shadow: 0px 2px 6px rgba(13, 110, 253, 0.4);
+        }
+        .nav-link:hover {
+            color: #ffc107 !important;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar Navigation Cân Đối -->
+    <nav class="navbar navbar-expand-xl navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand fw-bold text-warning fs-5 me-3" href="/">🏨 KHÁCH SẠN SYSTEM</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-center gap-1">
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.path == '/' %}active-item{% endif %}" href="/">🗺️ Sơ Đồ Phòng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.path == '/so-do-gantt' %}active-item{% endif %}" href="/so-do-gantt">📈 Sơ Đồ Gantt</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.path == '/loai-phong' %}active-item{% endif %}" href="/loai-phong">🏷️ Loại Phòng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.path == '/phong' %}active-item{% endif %}" href="/phong">🛏️ Quản Lý Phòng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.path == '/dich-vu' %}active-item{% endif %}" href="/dich-vu">🛠️ Dịch Vụ Mẫu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.path == '/hientai-datphong' %}active-item{% endif %}" href="/hientai-datphong">🔑 Đặt Phòng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.path == '/hientai-sudung-dv' %}active-item{% endif %}" href="/hientai-sudung-dv">🛒 Khách Dùng DV</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 text-danger fw-bold {% if request.path == '/tra-phong' %}active-item{% endif %}" href="/tra-phong">💳 Trả Phòng</a>
+                    </li>
+
+                    <!-- DROPDOWN TRA CỨU LỊCH SỬ -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-info fw-bold px-2 {% if request.path.startswith('/ls-') %}active-item{% endif %}" href="#" data-bs-toggle="dropdown">📂 LỊCH SỬ</a>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item {% if request.path == '/ls-datphong' %}fw-bold text-primary{% endif %}" href="/ls-datphong">📋 Lịch Sử Đặt Phòng</a></li>
+                            <li><a class="dropdown-item {% if request.path == '/ls-sudung-dv' %}fw-bold text-primary{% endif %}" href="/ls-sudung-dv">🛒 Lịch Sử Dùng Dịch Vụ</a></li>
+                            <li><a class="dropdown-item {% if request.path == '/ls-hoadon' %}fw-bold text-primary{% endif %}" href="/ls-hoadon">🧾 Lịch Sử Hóa Đơn</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.path == '/bao-cao' %}active-item{% endif %}" href="/bao-cao">📊 Báo Cáo</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center ms-auto">
+                    <span class="text-white me-3"><i class="bi bi-person-circle"></i> admin</span>
+                    <a href="/logout" class="btn btn-outline-danger btn-sm fw-bold"><i class="bi bi-box-arrow-right"></i> Thoát</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 py-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

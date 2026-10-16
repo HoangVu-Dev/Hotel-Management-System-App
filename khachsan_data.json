@@ -1,0 +1,216 @@
+{
+    "danh_sach_loai_phong": [
+        {
+            "ma_loai": "STD",
+            "ten_loai": "Phòng Thường (Standard)",
+            "gia_co_ban": 500,
+            "phi_don_dep": 0,
+            "phi_minibar": 0
+        },
+        {
+            "ma_loai": "VIP",
+            "ten_loai": "Phòng VIP Cao Cấp",
+            "gia_co_ban": 1000,
+            "phi_don_dep": 100,
+            "phi_minibar": 50
+        }
+    ],
+    "danh_sach_phong": [
+        {
+            "ma_phong": "P101",
+            "ten_phong": "Phong 01",
+            "ma_loai": "STD",
+            "gia_co_ban": 500,
+            "phi_don_dep": 0,
+            "phi_minibar": 0,
+            "trang_thai": "Đã thuê"
+        },
+        {
+            "ma_phong": "P201",
+            "ten_phong": "Phong Vip 01",
+            "ma_loai": "VIP",
+            "gia_co_ban": 1000,
+            "phi_don_dep": 100,
+            "phi_minibar": 50,
+            "trang_thai": "Trống"
+        },
+        {
+            "ma_phong": "P102",
+            "ten_phong": "Phong 02",
+            "ma_loai": "STD",
+            "gia_co_ban": 500,
+            "phi_don_dep": 0,
+            "phi_minibar": 0,
+            "trang_thai": "Trống"
+        }
+    ],
+    "danh_sach_phieu": [
+        {
+            "khach_hang": {
+                "cccd": "123456",
+                "ten": "acb"
+            },
+            "ma_phong": "P101",
+            "ngay_checkin": "2026-10-16",
+            "ngay_checkout": "2026-10-19",
+            "trang_thai_pay": "Đã thanh toán"
+        },
+        {
+            "khach_hang": {
+                "cccd": "789456",
+                "ten": "a"
+            },
+            "ma_phong": "P101",
+            "ngay_checkin": "2026-10-19",
+            "ngay_checkout": "2026-10-26",
+            "trang_thai_pay": "Chưa thanh toán"
+        },
+        {
+            "khach_hang": {
+                "cccd": "123456",
+                "ten": "a"
+            },
+            "ma_phong": "P101",
+            "ngay_checkin": "2026-10-16",
+            "ngay_checkout": "2026-10-18",
+            "trang_thai_pay": "Chưa thanh toán"
+        }
+    ],
+    "danh_sach_dv": [
+        {
+            "ma_dv": "dv01",
+            "ten_dv": "giặt ủi",
+            "gia_dv": 50
+        },
+        {
+            "ma_dv": "dv02",
+            "ten_dv": "đi chợ",
+            "gia_dv": 20
+        },
+        {
+            "ma_dv": "dv03",
+            "ten_dv": "sửa điện",
+            "gia_dv": 15
+        }
+    ],
+    "lich_su_su_dung_dv": [
+        {
+            "cccd": "123456",
+            "ten_khach": "acb",
+            "ma_phong": "P101",
+            "ma_dv": "dv01",
+            "ten_dv": "giặt ủi",
+            "gia_dv": 50000,
+            "so_luong": 1,
+            "ngay_su_dung": "2026-10-16",
+            "da_thanh_toan": true
+        },
+        {
+            "cccd": "123456",
+            "ten_khach": "acb",
+            "ma_phong": "P101",
+            "ma_dv": "dv02",
+            "ten_dv": "đi chợ",
+            "gia_dv": 20000,
+            "so_luong": 1,
+            "ngay_su_dung": "2026-10-16",
+            "da_thanh_toan": true
+        },
+        {
+            "cccd": "789456",
+            "ten_khach": "a",
+            "ma_phong": "P101",
+            "ma_dv": "dv01",
+            "ten_dv": "giặt ủi",
+            "gia_dv": 50,
+            "so_luong": 2,
+            "ngay_su_dung": "2026-10-16",
+            "da_thanh_toan": false
+        },
+        {
+            "cccd": "789456",
+            "ten_khach": "a",
+            "ma_phong": "P101",
+            "ma_dv": "dv02",
+            "ten_dv": "đi chợ",
+            "gia_dv": 20,
+            "so_luong": 1,
+            "ngay_su_dung": "2026-10-16",
+            "da_thanh_toan": false
+        },
+        {
+            "cccd": "789456",
+            "ten_khach": "a",
+            "ma_phong": "P101",
+            "ma_dv": "dv03",
+            "ten_dv": "sửa điện",
+            "gia_dv": 30,
+            "so_luong": 1,
+            "ngay_su_dung": "2026-10-16",
+            "da_thanh_toan": false
+        }
+    ],
+    "lich_su_hoa_don": [
+        {
+            "ma_hd": "HD1792120176",
+            "ma_phong": "P101",
+            "ten_khach": "acb",
+            "cccd": "123456",
+            "so_ngay": 2,
+            "ngay_checkin": "2026-10-16",
+            "ngay_thanh_toan": "2026-10-16",
+            "dich_vu": [
+                {
+                    "ma_dv": "dv01",
+                    "ten_dv": "giặt ủi",
+                    "gia_dv": 50000,
+                    "so_luong": 1
+                }
+            ],
+            "tien_phong": 2150000,
+            "tien_dich_vu": 50000,
+            "tong_tien": 2200000,
+            "phuong_thuc": "Thẻ tín dụng (POS)",
+            "trang_thai": "Đã thanh toán"
+        },
+        {
+            "ma_hd": "HD1792132146",
+            "ma_phong": "P101",
+            "ten_khach": "acb",
+            "cccd": "123456",
+            "ngay_checkin": "2026-10-16",
+            "ngay_checkout": "2026-10-19",
+            "so_ngay": 3,
+            "ngay_thanh_toan": "2026-10-16",
+            "tien_phong": 3150000,
+            "tien_dich_vu": 70000,
+            "dich_vu_su_dung": [
+                {
+                    "cccd": "123456",
+                    "ten_khach": "acb",
+                    "ma_phong": "P101",
+                    "ma_dv": "dv01",
+                    "ten_dv": "giặt ủi",
+                    "gia_dv": 50000,
+                    "so_luong": 1,
+                    "ngay_su_dung": "2026-10-16",
+                    "da_thanh_toan": true
+                },
+                {
+                    "cccd": "123456",
+                    "ten_khach": "acb",
+                    "ma_phong": "P101",
+                    "ma_dv": "dv02",
+                    "ten_dv": "đi chợ",
+                    "gia_dv": 20000,
+                    "so_luong": 1,
+                    "ngay_su_dung": "2026-10-16",
+                    "da_thanh_toan": true
+                }
+            ],
+            "tong_tien": 3220000,
+            "phuong_thuc": "Tiền mặt",
+            "trang_thai": "Thanh toán thành công"
+        }
+    ]
+}

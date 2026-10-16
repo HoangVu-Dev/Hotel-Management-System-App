@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-primary fw-bold"><i class="bi bi-journal-check"></i> ĐẶT PHÒNG HIỆN TẠI & ĐẶT TRƯỚC</h3>
+    <button class="btn btn-success fw-bold" onclick="moModalDatPhong()"><i class="bi bi-key-fill"></i> Đặt Phòng Mới</button>
+</div>
+
+<!-- Thanh Lọc Tìm Kiếm có nút đỏ chéo Clear x -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="/hientai-datphong" class="row g-2 align-items-center">
+            <div class="col-md-9 position-relative">
+                <input type="text" id="kw_input" name="kw" class="form-control pe-5" placeholder="Gõ tìm kiếm Tên khách, CCCD, Mã phòng..." value="{{ kw }}">
+                {% if kw %}
+                <button type="button" class="btn btn-danger btn-sm position-absolute top-50 end-0 translate-middle-y me-2 rounded-circle" style="width: 26px; height: 26px; padding: 0;" onclick="clearSearch('kw_input', '/hientai-datphong')">✕</button>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-search"></i> Lọc Tìm Kiếm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<table class="table table-bordered table-hover align-middle text-center bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Mã Phòng</th>
+            <th>Tên Khách Hàng</th>
+            <th>CCCD / CMND</th>
+            <th>Ngày Đến (Check-in)</th>
+            <th>Ngày Đi (Check-out)</th>
+            <th>Số Ngày</th>
+            <th>Trạng Thái Thuê</th>
+            <th>Hành Động (CRUD)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pt in danh_sach_phieu %}
+        <tr>
+            <td class="fw-bold fs-6">{{ pt.phong.ma_phong }}</td>
+            <td>{{ pt.khach_hang.ten }}</td>
+            <td><span class="badge bg-secondary">{{ pt.khach_hang.cccd }}</span></td>
+            <td>{{ pt.ngay_checkin }}</td>
+            <td>{{ pt.ngay_checkout }}</td>
+            <td class="fw-bold text-primary text-center">{{ pt.tinh_so_ngay() }} Ngày</td>
+            <td>
+                {% if pt.tinh_trang_thai_luu_tru() == 'Đang ở' %}
+                    <span class="badge bg-danger fs-6"><i class="bi bi-house-door-fill"></i> Đang Ở</span>
+                {% else %}
+                    <span class="badge bg-warning text-dark fs-6"><i class="bi bi-clock-history"></i> Đặt Trước</span>
+                {% endif %}
+            </td>
+            <td>
+                <button class="btn btn-sm btn-warning text-white me-1" onclick="moModalSuaDatPhong('{{ pt.phong.ma_phong }}', '{{ pt.khach_hang.ten }}', '{{ pt.khach_hang.cccd }}', '{{ pt.ngay_checkin }}', '{{ pt.ngay_checkout }}')">
+                    <i class="bi bi-pencil-square"></i> Sửa
+                </button>
+                <form action="/hientai-datphong/xoa" method="POST" style="display:inline;">
+                    <input type="hidden" name="ma_phong" value="{{ pt.phong.ma_phong }}">
+                    <input type="hidden" name="cccd" value="{{ pt.khach_hang.cccd }}">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn hủy đặt phòng này?')">
+                        <i class="bi bi-trash"></i> Hủy
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="py-3 text-muted">Hiện tại không có phòng nào đang ở hoặc đặt trước.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal Đặt Phòng Mới -->
+<div class="modal fade" id="modalDatPhong" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/dat-phong/them" method="POST">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">Đặt Phòng Mới</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Chọn Phòng Trống</label>
+                <select name="ma_phong" class="form-select" required>
+                    {% for p in phong_trong %}
+                        <option value="{{ p.ma_phong }}">{{ p.ma_phong }} - {{ p.ten_phong }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tên khách hàng</label>
+                <input type="text" name="ten_khach" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Số CCCD/CMND</label>
+                <input type="text" name="cccd" class="form-control text-center" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Ngày đến (Check-in)</label>
+                <input type="date" name="ngay_in" class="form-control text-center" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Ngày đi (Check-out)</label>
+                <input type="date" name="ngay_out" class="form-control text-center" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success fw-bold">Xác Nhận Đặt Phòng</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sửa Đặt Phòng -->
+<div class="modal fade" id="modalSuaDatPhong" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/hientai-datphong/sua" method="POST">
+          <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title">Chỉnh Sửa Thông Tin Đặt Phòng</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="ma_phong" id="edit_dp_maphong">
+            <input type="hidden" name="cccd_cu" id="edit_dp_cccd_cu">
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tên khách hàng</label>
+                <input type="text" name="ten_khach" id="edit_dp_tenkhach" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Số CCCD/CMND Mới</label>
+                <input type="text" name="cccd_moi" id="edit_dp_cccd_moi" class="form-control text-center" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Ngày đến (Check-in)</label>
+                <input type="date" name="ngay_in" id="edit_dp_ngayin" class="form-control text-center" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Ngày đi (Check-out)</label>
+                <input type="date" name="ngay_out" id="edit_dp_ngayout" class="form-control text-center" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-warning fw-bold">Lưu Thay Đổi</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let modalDatPhong = new bootstrap.Modal(document.getElementById('modalDatPhong'));
+let modalSuaDatPhong = new bootstrap.Modal(document.getElementById('modalSuaDatPhong'));
+
+function moModalDatPhong() { modalDatPhong.show(); }
+
+function moModalSuaDatPhong(maPhong, tenKhach, cccd, ngayIn, ngayOut) {
+    document.getElementById("edit_dp_maphong").value = maPhong;
+    document.getElementById("edit_dp_cccd_cu").value = cccd;
+    document.getElementById("edit_dp_tenkhach").value = tenKhach;
+    document.getElementById("edit_dp_cccd_moi").value = cccd;
+    document.getElementById("edit_dp_ngayin").value = ngayIn;
+    document.getElementById("edit_dp_ngayout").value = ngayOut;
+    modalSuaDatPhong.show();
+}
+
+function clearSearch(inputId, redirectUrl) {
+    document.getElementById(inputId).value = "";
+    window.location.href = redirectUrl;
+}
+</script>
+{% endblock %}

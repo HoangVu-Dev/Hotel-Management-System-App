@@ -1,0 +1,160 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="mb-4 text-primary fw-bold"><i class="bi bi-receipt"></i> TRẢ PHÒNG & THANH TOÁN HÓA ĐƠN HẠN ĐỊNH</h3>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-danger text-white fw-bold fs-6">🛎️ Danh Sách Phòng Đang Có Khách Chờ Trả & Thanh Toán</div>
+    <div class="card-body p-0">
+        <table class="table table-bordered align-middle text-center mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã Phòng</th>
+                    <th>Tên Phòng</th>
+                    <th>Thao Tác Thanh Toán</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in phong_da_thue %}
+                <tr>
+                    <td class="fw-bold fs-5">{{ p.ma_phong }}</td>
+                    <td>{{ p.ten_phong }}</td>
+                    <td>
+                        <button class="btn btn-danger fw-bold" onclick="moModalInvoice('{{ p.ma_phong }}')">
+                            <i class="bi bi-calculator"></i> Lập Hóa Đơn & Thanh Toán
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3" class="py-4 text-muted">Hiện tại không có phòng nào chờ trả.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Pop-up Hóa đơn Invoice -->
+<div class="modal fade" id="modalInvoice" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">🧾 HÓA ĐƠN THANH TOÁN KHÁCH SẠN</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="invoiceContent"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentMaPhong = "";
+let checkInterval = null;
+
+function moModalInvoice(maPhong) {
+    currentMaPhong = maPhong;
+    let modal = new bootstrap.Modal(document.getElementById('modalInvoice'));
+    document.getElementById('invoiceContent').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+    modal.show();
+
+    fetch(`/api/invoice/${maPhong}`)
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === "success") {
+            let html = `
+                <div class="border p-3 rounded mb-3 bg-light">
+                    <h5><b>Mã Hóa Đơn:</b> <span class="text-primary">${res.ma_hd}</span></h5>
+                    <p class="mb-1"><b>Khách hàng:</b> ${res.ten_khach} (CCCD: ${res.cccd})</p>
+                    <p class="mb-1"><b>Phòng:</b> ${res.ma_phong} | <b>Thời gian ở:</b> từ ${res.ngay_in} đến ${res.ngay_out} (${res.so_ngay} Ngày)</p>
+                    <p class="mb-0"><b>Tiền phòng:</b> ${res.tien_phong.toLocaleString()} VNĐ</p>
+                </div>
+
+                <h6 class="fw-bold">Chi tiết dịch vụ phát sinh:</h6>
+                <table class="table table-sm table-bordered text-center">
+                    <thead class="table-secondary">
+                        <tr><th>Dịch vụ</th><th>Đơn giá</th><th>Số lượng</th><th>Thành tiền</th></tr>
+                    </thead>
+                    <tbody>`;
+            
+            if(res.dich_vu.length === 0) {
+                html += `<tr><td colspan="4" class="text-muted">Không có dịch vụ thêm.</td></tr>`;
+            } else {
+                res.dich_vu.forEach(dv => {
+                    html += `<tr>
+                        <td>${dv.ten_dv}</td>
+                        <td>${dv.gia_dv.toLocaleString()} VNĐ</td>
+                        <td>${dv.so_luong}</td>
+                        <td>${(dv.gia_dv * dv.so_luong).toLocaleString()} VNĐ</td>
+                    </tr>`;
+                });
+            }
+
+            html += `</tbody></table>
+                <div class="text-end text-danger fs-4 fw-bold my-3">TỔNG THÀNH TIỀN: ${res.tong_tien.toLocaleString()} VNĐ</div>
+
+                <hr>
+                <h6 class="fw-bold">Chọn Phương Thức Thanh Toán:</h6>
+                <div class="row text-center g-2 mt-2">
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary w-100 py-2" onclick="showChuyenKhoan('${res.qr_url}', '${res.noi_dung_ck}')">
+                            <i class="bi bi-qr-code-scan"></i> Chuyển Khoản QR
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-success w-100 py-2" onclick="xacNhanPay('Thẻ tín dụng (POS)')">
+                            <i class="bi bi-credit-card"></i> Quẹt Thẻ POS
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-dark w-100 py-2" onclick="xacNhanPay('Tiền mặt')">
+                            <i class="bi bi-cash-stack"></i> Tiền Mặt
+                        </button>
+                    </div>
+                </div>
+
+                <div id="qrArea" class="text-center mt-3 d-none border p-3 rounded bg-white">
+                    <h6 class="text-success fw-bold">Quét mã VietQR VietinBank tự động nhận tiền qua SePay</h6>
+                    <img src="${res.qr_url}" style="max-width: 200px;" class="img-thumbnail">
+                    <p class="mt-2 mb-0 text-muted">Nội dung chuyển khoản chuẩn: <b class="text-dark">${res.noi_dung_ck}</b></p>
+                    <div class="text-primary mt-2"><div class="spinner-grow spinner-grow-sm"></div> Đang chờ hệ thống SePay xác nhận...</div>
+                </div>`;
+            
+            document.getElementById('invoiceContent').innerHTML = html;
+        }
+    });
+}
+
+function showChuyenKhoan(qrUrl, content) {
+    document.getElementById('qrArea').classList.remove('d-none');
+    if(checkInterval) clearInterval(checkInterval);
+    checkInterval = setInterval(() => {
+        fetch(`/api/check-payment-status/${currentMaPhong}`)
+        .then(r => r.json())
+        .then(res => {
+            if(res.paid) {
+                clearInterval(checkInterval);
+                alert("🎉 SePay xác nhận thanh toán thành công!");
+                location.reload();
+            }
+        });
+    }, 3000);
+}
+
+function xacNhanPay(phuongThuc) {
+    if(!confirm(`Xác nhận thanh toán bằng phương thức: ${phuongThuc}?`)) return;
+
+    fetch('/api/thanh-toan-xac-nhan', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ma_phong: currentMaPhong, phuong_thuc: phuongThuc})
+    })
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === "success") {
+            alert("✅ Thanh toán hoàn tất!");
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="mb-4 text-primary fw-bold"><i class="bi bi-journal-bookmark-fill"></i> LỊCH SỬ ĐẶT PHÒNG (ĐÃ HOÀN TẤT)</h3>
+
+<!-- Bộ Lọc Tìm Kiếm -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="/ls-datphong" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" name="kw" class="form-control" placeholder="Tìm theo Tên khách, Số CCCD hoặc Mã phòng..." value="{{ kw }}">
+            </div>
+            <div class="col-md-4">
+                <input type="date" name="ngay" class="form-control" value="{{ ngay }}">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-search"></i> Tìm Kiếm Lịch Sử</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0 text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã Phòng</th>
+                    <th>Tên Khách Hàng</th>
+                    <th>Số CCCD</th>
+                    <th>Ngày Đến (Check-in)</th>
+                    <th>Ngày Đi (Check-out)</th>
+                    <th>Số Ngày Lưu Trú</th>
+                    <th>Trạng Thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pt in danh_sach %}
+                <tr>
+                    <td class="fw-bold">{{ pt.phong.ma_phong }}</td>
+                    <td>{{ pt.khach_hang.ten }}</td>
+                    <td><span class="badge bg-secondary">{{ pt.khach_hang.cccd }}</span></td>
+                    <td>{{ pt.ngay_checkin }}</td>
+                    <td>{{ pt.ngay_checkout }}</td>
+                    <td>{{ pt.tinh_so_ngay() }} Ngày</td>
+                    <td><span class="badge bg-success">Đã hoàn tất & Thanh toán</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="py-4 text-muted">Không tìm thấy lịch sử đặt phòng phù hợp.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,257 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-5">
+        <h3 class="text-primary fw-bold"><i class="bi bi-grid-3x3-gap-fill"></i> SƠ ĐỒ KHÁCH SẠN</h3>
+        <p class="text-muted mb-0">📅 Ngày hôm nay: <b class="text-dark fs-5">{{ hom_nay }}</b></p>
+    </div>
+    <!-- Bảng Giờ Thế Giới -->
+    <div class="col-md-7">
+        <div class="card bg-dark text-white p-2 shadow-sm">
+            <div class="row text-center">
+                <div class="col-3">
+                    <small class="text-warning">🇻🇳 Hà Nội</small>
+                    <div id="clock-hanoi" class="fw-bold fs-6">00:00:00</div>
+                </div>
+                <div class="col-3">
+                    <small class="text-info">🇬🇧 London</small>
+                    <div id="clock-london" class="fw-bold fs-6">00:00:00</div>
+                </div>
+                <div class="col-3">
+                    <small class="text-danger">🇺🇸 New York</small>
+                    <div id="clock-ny" class="fw-bold fs-6">00:00:00</div>
+                </div>
+                <div class="col-3">
+                    <small class="text-success">🇯🇵 Tokyo</small>
+                    <div id="clock-tokyo" class="fw-bold fs-6">00:00:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    {% for p in danh_sach_phong %}
+    <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-2 {% if p.trang_thai == 'Trống' %}border-success{% else %}border-danger{% endif %}">
+            <div class="card-header text-white fw-bold d-flex justify-content-between align-items-center {% if p.trang_thai == 'Trống' %}bg-success{% else %}bg-danger{% endif %}">
+                <span>{{ p.ma_phong }}</span>
+                <span class="badge bg-light text-dark">{{ p.ma_loai }}</span>
+            </div>
+            <div class="card-body text-center">
+                <h5>{{ p.ten_phong }}</h5>
+                <p class="text-muted mb-1">{{ "{:,.0f}".format(p.gia_co_ban) }} VNĐ/ngày</p>
+                <p class="fw-bold">
+                    {% if p.trang_thai == 'Trống' %}
+                        <span class="text-success"><i class="bi bi-door-open-fill"></i> Phòng Trống</span>
+                    {% else %}
+                        <span class="text-danger"><i class="bi bi-person-fill"></i> Đang Có Khách</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="card-footer bg-transparent text-center">
+                <button class="btn btn-sm btn-info text-white fw-bold" onclick="xemChiTietPhong('{{ p.ma_phong }}')">
+                    <i class="bi bi-eye-fill"></i> Xem Chi Tiết
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pop-up Modal Chi Tiết Phòng & Thanh Toán Trực Tiếp -->
+<div class="modal fade" id="modalChiTiet" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-house-door-fill me-2"></i>Chi Tiết Phòng & Thanh Toán</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modalBodyDetail">
+        <div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Đang nạp thông tin...</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateClocks() {
+    const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    document.getElementById('clock-hanoi').innerText = new Date().toLocaleTimeString('vi-VN', { ...options, timeZone: 'Asia/Ho_Chi_Minh' });
+    document.getElementById('clock-london').innerText = new Date().toLocaleTimeString('vi-VN', { ...options, timeZone: 'Europe/London' });
+    document.getElementById('clock-ny').innerText = new Date().toLocaleTimeString('vi-VN', { ...options, timeZone: 'America/New_York' });
+    document.getElementById('clock-tokyo').innerText = new Date().toLocaleTimeString('vi-VN', { ...options, timeZone: 'Asia/Tokyo' });
+}
+setInterval(updateClocks, 1000);
+updateClocks();
+
+let modalChiTietObj = null;
+let currentMaPhongPay = "";
+let checkInterval = null;
+
+function xemChiTietPhong(maPhong) {
+    currentMaPhongPay = maPhong;
+    if(!modalChiTietObj) {
+        modalChiTietObj = new bootstrap.Modal(document.getElementById('modalChiTiet'));
+    }
+    document.getElementById('modalBodyDetail').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Đang nạp thông tin...</p></div>';
+    modalChiTietObj.show();
+
+    fetch(`/api/phong/${maPhong}`)
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === "success") {
+            let d = res.data;
+            let html = `
+                <div class="border-bottom pb-2 mb-3">
+                    <p class="mb-1"><b>Mã phòng:</b> <span class="badge bg-secondary fs-6">${d.ma_phong}</span></p>
+                    <p class="mb-1"><b>Tên phòng:</b> ${d.ten_phong}</p>
+                    <p class="mb-1"><b>Giá cơ bản:</b> ${Number(d.gia_co_ban).toLocaleString()} VNĐ/ngày</p>
+                    <p class="mb-0"><b>Trạng thái:</b> <span class="badge ${d.trang_thai === 'Trống' ? 'bg-success' : 'bg-danger'}">${d.trang_thai}</span></p>
+                </div>`;
+            
+            if(d.khach_hang) {
+                html += `
+                    <div class="bg-light p-3 rounded mb-3">
+                        <h6 class="text-primary fw-bold mb-2"><i class="bi bi-person-badge"></i> Khách Hàng Hiện Tại:</h6>
+                        <p class="mb-1"><b>Họ tên:</b> ${d.khach_hang}</p>
+                        <p class="mb-1"><b>Số CCCD:</b> ${d.cccd}</p>
+                        <p class="mb-1"><b>Thời gian lưu trú:</b> Từ <b class="text-success">${d.ngay_checkin}</b> đến <b class="text-danger">${d.ngay_checkout}</b> (${d.so_ngay} Ngày)</p>
+                        <p class="mb-0"><b>Trạng thái:</b> <span class="badge ${d.trang_thai_luu_tru === 'Đang ở' ? 'bg-danger' : 'bg-warning text-dark'}">${d.trang_thai_luu_tru}</span></p>
+                    </div>`;
+                
+                if(d.dich_vu && d.dich_vu.length > 0) {
+                    html += `<h6 class="fw-bold text-dark"><i class="bi bi-cart"></i> Dịch Vụ Đã Sử Dụng:</h6><ul class="list-group list-group-flush mb-3">`;
+                    d.dich_vu.forEach(dv => {
+                        html += `<li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                            <span>${dv.ten_dv} (x${dv.so_luong})</span>
+                            <b class="text-danger">${(dv.gia_dv * dv.so_luong).toLocaleString()} VNĐ</b>
+                        </li>`;
+                    });
+                    html += `</ul>`;
+                }
+
+                // NÚT THANH TOÁN TRỰC TIẾP NGAY TRÊN POP-UP
+                html += `
+                    <div class="text-end mt-3 pt-3 border-top">
+                        <button class="btn btn-danger fw-bold px-4 py-2 fs-6" onclick="lapHoaDonTrucTiep('${d.ma_phong}')">
+                            <i class="bi bi-credit-card-fill me-1"></i> Thanh Toán & Trả Phòng Trực Tiếp
+                        </button>
+                    </div>`;
+            } else {
+                html += `<p class="text-success fw-bold text-center my-3"><i class="bi bi-check-circle"></i> Phòng hiện tại đang trống và sẵn sàng đón khách.</p>`;
+            }
+            document.getElementById('modalBodyDetail').innerHTML = html;
+        } else {
+            document.getElementById('modalBodyDetail').innerHTML = `<div class="alert alert-danger">${res.message}</div>`;
+        }
+    });
+}
+
+// Hàm mở giao diện lập hóa đơn thanh toán trực tiếp ngay trong Pop-up
+function lapHoaDonTrucTiep(maPhong) {
+    document.getElementById('modalBodyDetail').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-danger"></div><p class="mt-2 text-muted">Đang lập hóa đơn thanh toán...</p></div>';
+
+    fetch(`/api/invoice/${maPhong}`)
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === "success") {
+            let html = `
+                <div class="border p-3 rounded mb-3 bg-light">
+                    <h5><b>Mã Hóa Đơn:</b> <span class="text-primary">${res.ma_hd}</span></h5>
+                    <p class="mb-1"><b>Khách hàng:</b> ${res.ten_khach} (CCCD: ${res.cccd})</p>
+                    <p class="mb-1"><b>Phòng:</b> ${res.ma_phong} | <b>Thời gian:</b> ${res.ngay_in} đến ${res.ngay_out} (${res.so_ngay} Ngày)</p>
+                    <p class="mb-0"><b>Tiền phòng:</b> ${res.tien_phong.toLocaleString()} VNĐ</p>
+                </div>
+
+                <h6 class="fw-bold">Chi tiết dịch vụ:</h6>
+                <table class="table table-sm table-bordered text-center">
+                    <thead class="table-secondary">
+                        <tr><th>Dịch vụ</th><th>Đơn giá</th><th>Số lượng</th><th>Thành tiền</th></tr>
+                    </thead>
+                    <tbody>`;
+            
+            if(res.dich_vu.length === 0) {
+                html += `<tr><td colspan="4" class="text-muted">Không có dịch vụ thêm.</td></tr>`;
+            } else {
+                res.dich_vu.forEach(dv => {
+                    html += `<tr>
+                        <td>${dv.ten_dv}</td>
+                        <td>${dv.gia_dv.toLocaleString()} VNĐ</td>
+                        <td>${dv.so_luong}</td>
+                        <td>${(dv.gia_dv * dv.so_luong).toLocaleString()} VNĐ</td>
+                    </tr>`;
+                });
+            }
+
+            html += `</tbody></table>
+                <div class="text-end text-danger fs-4 fw-bold my-3">TỔNG THÀNH TIỀN: ${res.tong_tien.toLocaleString()} VNĐ</div>
+
+                <hr>
+                <h6 class="fw-bold">Chọn Phương Thức Thanh Toán:</h6>
+                <div class="row text-center g-2 mt-2">
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary w-100 py-2" onclick="showChuyenKhoan('${res.qr_url}', '${res.noi_dung_ck}')">
+                            <i class="bi bi-qr-code-scan"></i> Chuyển Khoản QR
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-success w-100 py-2" onclick="xacNhanPayDirect('${res.ma_phong}', 'Thẻ tín dụng (POS)')">
+                            <i class="bi bi-credit-card"></i> Quẹt Thẻ POS
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-dark w-100 py-2" onclick="xacNhanPayDirect('${res.ma_phong}', 'Tiền mặt')">
+                            <i class="bi bi-cash-stack"></i> Tiền Mặt
+                        </button>
+                    </div>
+                </div>
+
+                <div id="qrAreaDirect" class="text-center mt-3 d-none border p-3 rounded bg-white">
+                    <h6 class="text-success fw-bold">Quét mã VietQR VietinBank nhận tiền qua SePay</h6>
+                    <img src="${res.qr_url}" style="max-width: 200px;" class="img-thumbnail">
+                    <p class="mt-2 mb-0 text-muted">Nội dung chuyển khoản chuẩn: <b class="text-dark">${res.noi_dung_ck}</b></p>
+                    <div class="text-primary mt-2"><div class="spinner-grow spinner-grow-sm"></div> Đang chờ SePay xác nhận...</div>
+                </div>`;
+            
+            document.getElementById('modalBodyDetail').innerHTML = html;
+        }
+    });
+}
+
+function showChuyenKhoan(qrUrl, content) {
+    document.getElementById('qrAreaDirect').classList.remove('d-none');
+    if(checkInterval) clearInterval(checkInterval);
+    checkInterval = setInterval(() => {
+        fetch(`/api/check-payment-status/${currentMaPhongPay}`)
+        .then(r => r.json())
+        .then(res => {
+            if(res.paid) {
+                clearInterval(checkInterval);
+                alert("🎉 SePay xác nhận thanh toán thành công!");
+                location.reload();
+            }
+        });
+    }, 3000);
+}
+
+function xacNhanPayDirect(maPhong, phuongThuc) {
+    if(!confirm(`Xác nhận thanh toán trực tiếp bằng phương thức: ${phuongThuc}?`)) return;
+
+    fetch('/api/thanh-toan-xac-nhan', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ma_phong: maPhong, phuong_thuc: phuongThuc})
+    })
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === "success") {
+            alert("✅ Thanh toán trực tiếp thành công!");
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

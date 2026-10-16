@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-primary fw-bold"><i class="bi bi-tags-fill"></i> QUY ĐỊNH LOẠI PHÒNG & MỨC GIÁ CHUẨN</h3>
+    <button class="btn btn-primary fw-bold" onclick="moModalThemLoai()"><i class="bi bi-plus-circle"></i> Thêm Loại Phòng Mới</button>
+</div>
+
+<table class="table table-bordered table-hover align-middle text-center bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Mã Loại</th>
+            <th>Tên Loại Phòng</th>
+            <th>Giá Cơ Bản (VNĐ/ngày)</th>
+            <th>Phí Dọn Dẹp (VNĐ)</th>
+            <th>Phí Minibar (VNĐ)</th>
+            <th>Hành Động (CRUD)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lp in danh_sach_loai %}
+        <tr>
+            <td class="fw-bold">{{ lp.ma_loai }}</td>
+            <td>{{ lp.ten_loai }}</td>
+            <td class="text-primary fw-bold">{{ "{:,.0f}".format(lp.gia_co_ban) }} VNĐ</td>
+            <td>{{ "{:,.0f}".format(lp.phi_don_dep) }} VNĐ</td>
+            <td>{{ "{:,.0f}".format(lp.phi_minibar) }} VNĐ</td>
+            <td>
+                <button class="btn btn-sm btn-warning text-white me-1" onclick="moModalSuaLoai('{{ lp.ma_loai }}', '{{ lp.ten_loai }}', '{{ lp.gia_co_ban }}', '{{ lp.phi_don_dep }}', '{{ lp.phi_minibar }}')">
+                    <i class="bi bi-pencil-square"></i> Sửa
+                </button>
+                <form action="/loai-phong/xoa/{{ lp.ma_loai }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa loại phòng này?')">
+                        <i class="bi bi-trash"></i> Xóa
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pop-up Modal CRUD Loại Phòng -->
+<div class="modal fade" id="modalLoaiPhong" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formLoaiPhong" method="POST">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="titleModalLoai">Cấu Hình Loại Phòng</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Mã loại phòng (ví dụ: STD, VIP, DELUXE)</label>
+                <input type="text" name="ma_loai" id="lp_ma" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Tên loại phòng</label>
+                <input type="text" name="ten_loai" id="lp_ten" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Giá cơ bản (VNĐ/ngày)</label>
+                <input type="number" name="gia_co_ban" id="lp_gia" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Phí dọn dẹp phụ thu (VNĐ)</label>
+                <input type="number" name="phi_don_dep" id="lp_dondep" class="form-control" value="0">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Phí Minibar phụ thu (VNĐ)</label>
+                <input type="number" name="phi_minibar" id="lp_minibar" class="form-control" value="0">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Lưu Cấu Hình</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let modalLoaiPhong = new bootstrap.Modal(document.getElementById('modalLoaiPhong'));
+
+function moModalThemLoai() {
+    document.getElementById("formLoaiPhong").action = "/loai-phong/them";
+    document.getElementById("titleModalLoai").innerText = "Thêm Quy Định Loại Phòng Mới";
+    document.getElementById("lp_ma").readOnly = false;
+    document.getElementById("lp_ma").value = "";
+    document.getElementById("lp_ten").value = "";
+    document.getElementById("lp_gia").value = "";
+    document.getElementById("lp_dondep").value = "0";
+    document.getElementById("lp_minibar").value = "0";
+    modalLoaiPhong.show();
+}
+
+function moModalSuaLoai(ma, ten, gia, dondep, minibar) {
+    document.getElementById("formLoaiPhong").action = "/loai-phong/sua";
+    document.getElementById("titleModalLoai").innerText = "Cập Nhật Cấu Hình Loại Phòng";
+    document.getElementById("lp_ma").value = ma;
+    document.getElementById("lp_ma").readOnly = true;
+    document.getElementById("lp_ten").value = ten;
+    document.getElementById("lp_gia").value = gia;
+    document.getElementById("lp_dondep").value = dondep;
+    document.getElementById("lp_minibar").value = minibar;
+    modalLoaiPhong.show();
+}
+</script>
+{% endblock %}

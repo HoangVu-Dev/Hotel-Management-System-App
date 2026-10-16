@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-primary fw-bold"><i class="bi bi-tools"></i> DANH MỤC DỊCH VỤ KHÁCH SẠN</h3>
+    <button class="btn btn-primary fw-bold" onclick="moModalThemDV()"><i class="bi bi-plus-circle"></i> Thêm Dịch Vụ Mới</button>
+</div>
+
+<table class="table table-bordered table-hover align-middle text-center bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Mã DV</th>
+            <th>Tên Dịch Vụ</th>
+            <th>Đơn Giá</th>
+            <th>Hành Động (CRUD)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dv in danh_sach_dv %}
+        <tr>
+            <td class="fw-bold">{{ dv.ma_dv }}</td>
+            <td>{{ dv.ten_dv }}</td>
+            <td class="text-primary fw-bold">{{ "{:,.0f}".format(dv.gia_dv) }} VNĐ</td>
+            <td>
+                <button class="btn btn-sm btn-warning text-white me-1" onclick="moModalSuaDV('{{ dv.ma_dv }}', '{{ dv.ten_dv }}', '{{ dv.gia_dv }}')">
+                    <i class="bi bi-pencil-square"></i> Sửa
+                </button>
+                <form action="/dich-vu/xoa/{{ dv.ma_dv }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa dịch vụ này?')">
+                        <i class="bi bi-trash"></i> Xóa
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pop-up Modal CRUD Dịch Vụ -->
+<div class="modal fade" id="modalDV" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formDV" method="POST">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="titleModalDV">Thêm Dịch Vụ</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Mã dịch vụ</label>
+                <input type="text" name="ma_dv" id="dv_ma" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Tên dịch vụ</label>
+                <input type="text" name="ten_dv" id="dv_ten" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Đơn giá (VNĐ)</label>
+                <input type="number" name="gia_dv" id="dv_gia" class="form-control" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Lưu Dịch Vụ</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let modalDV = new bootstrap.Modal(document.getElementById('modalDV'));
+
+function moModalThemDV() {
+    document.getElementById("formDV").action = "/dich-vu/them";
+    document.getElementById("titleModalDV").innerText = "Thêm Dịch Vụ Mới";
+    document.getElementById("dv_ma").readOnly = false;
+    document.getElementById("dv_ma").value = "";
+    document.getElementById("dv_ten").value = "";
+    document.getElementById("dv_gia").value = "";
+    modalDV.show();
+}
+
+function moModalSuaDV(ma, ten, gia) {
+    document.getElementById("formDV").action = "/dich-vu/sua";
+    document.getElementById("titleModalDV").innerText = "Cập Nhật Dịch Vụ";
+    document.getElementById("dv_ma").value = ma;
+    document.getElementById("dv_ma").readOnly = true;
+    document.getElementById("dv_ten").value = ten;
+    document.getElementById("dv_gia").value = gia;
+    modalDV.show();
+}
+</script>
+{% endblock %}

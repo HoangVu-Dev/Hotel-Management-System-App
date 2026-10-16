@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="mb-4 text-primary fw-bold"><i class="bi bi-graph-up-arrow"></i> BÁO CÁO & BIỂU ĐỒ BIẾN ĐỘNG DOANH THỦ</h3>
+
+<div class="row g-4 mb-4">
+    <!-- Biểu đồ biến động theo Ngày trong Tháng -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white fw-bold">📈 Biến Động Doanh Thu Theo Các Ngày Trong Tháng</div>
+            <div class="card-body">
+                <form method="GET" action="/bao-cao" class="row g-2 mb-3">
+                    <div class="col-8">
+                        <input type="month" name="thang" value="{{ thang_query }}" class="form-control">
+                    </div>
+                    <div class="col-4">
+                        <button type="submit" class="btn btn-primary w-100">Xem Biểu Đồ</button>
+                    </div>
+                </form>
+                <canvas id="chartNgay" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ biến động theo Tháng trong Năm -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white fw-bold">📊 Biến Động Doanh Thu Giữa Các Tháng Trong Năm</div>
+            <div class="card-body">
+                <form method="GET" action="/bao-cao" class="row g-2 mb-3">
+                    <div class="col-8">
+                        <input type="number" name="nam" value="{{ nam_query }}" min="2020" max="2030" class="form-control">
+                    </div>
+                    <div class="col-4">
+                        <button type="submit" class="btn btn-success w-100">Xem Năm</button>
+                    </div>
+                </form>
+                <canvas id="chartThang" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Biểu đồ Đường - Biến động Ngày
+const ctxNgay = document.getElementById('chartNgay').getContext('2d');
+new Chart(ctxNgay, {
+    type: 'line',
+    data: {
+        labels: {{ labels_ngay | tojson }},
+        datasets: [{
+            label: 'Doanh thu (VNĐ)',
+            data: {{ data_ngay | tojson }},
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.2)',
+            fill: true,
+            tension: 0.3
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: true } } }
+});
+
+// Biểu đồ Cột - Biến động Tháng
+const ctxThang = document.getElementById('chartThang').getContext('2d');
+new Chart(ctxThang, {
+    type: 'bar',
+    data: {
+        labels: {{ labels_thang | tojson }},
+        datasets: [{
+            label: 'Doanh thu Tháng (VNĐ)',
+            data: {{ data_thang | tojson }},
+            backgroundColor: '#198754'
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: true } } }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="mb-4 text-primary fw-bold"><i class="bi bi-cart-check"></i> QUẢN LÝ KHÁCH HÀNG SỬ DỤNG DỊCH VỤ</h3>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white fw-bold">🛒 Thêm Dịch Vụ Cho Khách Đang Thuê Phòng</div>
+            <div class="card-body">
+                <form action="/su-dung-dich-vu/them" method="POST" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Chọn Phòng Đang Có Khách</label>
+                        <select name="ma_phong" class="form-select" required>
+                            <option value="">-- Chọn phòng --</option>
+                            {% for p in phong_da_thue %}
+                                <option value="{{ p.ma_phong }}">{{ p.ma_phong }} - {{ p.ten_phong }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Chọn Dịch Vụ Khách Sạn</label>
+                        <select name="ma_dv" class="form-select" required>
+                            <option value="">-- Chọn dịch vụ --</option>
+                            {% for dv in danh_sach_dv %}
+                                <option value="{{ dv.ma_dv }}">{{ dv.ten_dv }} ({{ "{:,.0f}".format(dv.gia_dv) }} VNĐ)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Số Lượng</label>
+                        <input type="number" name="so_luong" class="form-control" value="1" min="1" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100 fw-bold">Ghi Nhận Dùng DV</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white fw-bold">📋 LỊCH SỬ KHÁCH HÀNG SỬ DỤNG DỊCH VỤ (LƯU LÂU DÀI)</div>
+    <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0 text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Ngày Dùng</th>
+                    <th>Mã Khách (CCCD)</th>
+                    <th>Tên Khách Hàng</th>
+                    <th>Phòng</th>
+                    <th>Dịch Vụ Sử Dụng</th>
+                    <th>Số Lượng</th>
+                    <th>Đơn Giá</th>
+                    <th>Thành Tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sd in lich_su_dv %}
+                <tr>
+                    <td>{{ sd.ngay_su_dung }}</td>
+                    <td class="fw-bold">{{ sd.cccd }}</td>
+                    <td>{{ sd.ten_khach }}</td>
+                    <td><span class="badge bg-secondary">{{ sd.ma_phong }}</span></td>
+                    <td>{{ sd.ten_dv }}</td>
+                    <td>{{ sd.so_luong }}</td>
+                    <td>{{ "{:,.0f}".format(sd.gia_dv) }} VNĐ</td>
+                    <td class="text-danger fw-bold">{{ "{:,.0f}".format(sd.tinh_thanh_tien()) }} VNĐ</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="py-3 text-muted">Chưa có dữ liệu sử dụng dịch vụ.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

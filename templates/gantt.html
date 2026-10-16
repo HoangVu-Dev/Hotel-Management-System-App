@@ -1,0 +1,235 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-primary fw-bold"><i class="bi bi-bar-chart-steps"></i> SƠ ĐỒ GANTT TIMELINE ĐẶT & THUÊ PHÒNG</h3>
+    <div>
+        <span class="badge bg-danger fs-6 me-2"><i class="bi bi-square-fill"></i> Đang Ở</span>
+        <span class="badge bg-warning text-dark fs-6 me-2"><i class="bi bi-square-fill"></i> Đặt Trước</span>
+        <span class="badge bg-success fs-6"><i class="bi bi-square-fill"></i> Phòng Trống</span>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle text-center mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="min-width: 130px;" class="align-middle">Phòng (Nhấp xem)</th>
+                        {% for n in ds_ngay %}
+                        <th style="min-width: 85px;" class="{% if n == hom_nay %}bg-warning text-dark fw-bold{% endif %}">
+                            <small>{{ n[8:] }}/{{ n[5:7] }}</small><br>
+                            {% if n == hom_nay %}<span class="badge bg-dark">Hôm nay</span>{% endif %}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in danh_sach_phong %}
+                    <tr>
+                        <td class="fw-bold bg-light" style="cursor: pointer;" onclick="xemChiTietPhong('{{ p.ma_phong }}')">
+                            <span class="text-primary"><i class="bi bi-info-circle-fill me-1"></i>{{ p.ma_phong }}</span><br>
+                            <small class="text-muted fw-normal">({{ p.ma_loai }})</small>
+                        </td>
+                        {% for n in ds_ngay %}
+                            {% set ns = namespace(booked=false, is_in=false, ten='', cccd='') %}
+                            {% for pt in phieu_hien_tai %}
+                                {% if pt.phong.ma_phong == p.ma_phong and pt.ngay_checkin <= n and n < pt.ngay_checkout %}
+                                    {% set ns.booked = true %}
+                                    {% set ns.ten = pt.khach_hang.ten %}
+                                    {% set ns.cccd = pt.khach_hang.cccd %}
+                                    {% if pt.tinh_trang_thai_luu_tru() == 'Đang ở' %}
+                                        {% set ns.is_in = true %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if ns.booked %}
+                                {% if ns.is_in %}
+                                    <td class="bg-danger text-white p-1" style="cursor: pointer;" title="Nhấp xem chi tiết khách đang ở: {{ ns.ten }}" onclick="xemChiTietPhong('{{ p.ma_phong }}')">
+                                        <small class="fw-bold d-block text-truncate" style="max-width: 75px;">{{ ns.ten }}</small>
+                                    </td>
+                                {% else %}
+                                    <td class="bg-warning text-dark p-1" style="cursor: pointer;" title="Nhấp xem chi tiết khách đặt trước: {{ ns.ten }}" onclick="xemChiTietPhong('{{ p.ma_phong }}')">
+                                        <small class="fw-bold d-block text-truncate" style="max-width: 75px;">{{ ns.ten }}</small>
+                                    </td>
+                                {% endif %}
+                            {% else %}
+                                <td class="bg-light text-muted p-1" style="cursor: pointer;" onclick="xemChiTietPhong('{{ p.ma_phong }}')">
+                                    <small>-</small>
+                                </td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pop-up Modal Xem Chi Tiết & Thanh Toán Trực Tiếp trên Sơ Đồ Gantt -->
+<div class="modal fade" id="modalGanttChiTiet" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-house-door-fill me-2"></i>Thông Tin Chi Tiết Phòng & Thanh Toán</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modalGanttBody">
+        <div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Đang nạp dữ liệu...</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let modalGanttObj = null;
+let currentMaPhongPayGantt = "";
+
+function xemChiTietPhong(maPhong) {
+    currentMaPhongPayGantt = maPhong;
+    if(!modalGanttObj) {
+        modalGanttObj = new bootstrap.Modal(document.getElementById('modalGanttChiTiet'));
+    }
+    document.getElementById('modalGanttBody').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Đang nạp dữ liệu...</p></div>';
+    modalGanttObj.show();
+
+    fetch(`/api/phong/${maPhong}`)
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === "success") {
+            let d = res.data;
+            let html = `
+                <div class="border-bottom pb-2 mb-3">
+                    <p class="mb-1"><b>Mã phòng:</b> <span class="badge bg-secondary fs-6">${d.ma_phong}</span></p>
+                    <p class="mb-1"><b>Tên phòng:</b> ${d.ten_phong}</p>
+                    <p class="mb-1"><b>Giá cơ bản:</b> ${Number(d.gia_co_ban).toLocaleString()} VNĐ/ngày</p>
+                    <p class="mb-0"><b>Trạng thái:</b> <span class="badge ${d.trang_thai === 'Trống' ? 'bg-success' : 'bg-danger'}">${d.trang_thai}</span></p>
+                </div>`;
+            
+            if(d.khach_hang) {
+                html += `
+                    <div class="bg-light p-3 rounded mb-3">
+                        <h6 class="text-primary fw-bold mb-2"><i class="bi bi-person-badge"></i> Khách Hàng Thuê Phòng:</h6>
+                        <p class="mb-1"><b>Họ tên:</b> ${d.khach_hang}</p>
+                        <p class="mb-1"><b>Số CCCD:</b> ${d.cccd}</p>
+                        <p class="mb-1"><b>Thời gian:</b> Từ <b class="text-success">${d.ngay_checkin}</b> đến <b class="text-danger">${d.ngay_checkout}</b> (${d.so_ngay} Ngày)</p>
+                        <p class="mb-0"><b>Trạng thái thuê:</b> <span class="badge ${d.trang_thai_luu_tru === 'Đang ở' ? 'bg-danger' : 'bg-warning text-dark'}">${d.trang_thai_luu_tru}</span></p>
+                    </div>`;
+                
+                if(d.dich_vu && d.dich_vu.length > 0) {
+                    html += `<h6 class="fw-bold text-dark"><i class="bi bi-cart"></i> Dịch Vụ Đã Dùng:</h6><ul class="list-group list-group-flush mb-3">`;
+                    d.dich_vu.forEach(dv => {
+                        html += `<li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                            <span>${dv.ten_dv} (x${dv.so_luong}) - ${dv.ngay_su_dung}</span>
+                            <b class="text-danger">${(dv.gia_dv * dv.so_luong).toLocaleString()} VNĐ</b>
+                        </li>`;
+                    });
+                    html += `</ul>`;
+                }
+
+                // NÚT THANH TOÁN TRỰC TIẾP
+                html += `
+                    <div class="text-end mt-3 pt-3 border-top">
+                        <button class="btn btn-danger fw-bold px-4 py-2 fs-6" onclick="lapHoaDonGantt('${d.ma_phong}')">
+                            <i class="bi bi-credit-card-fill me-1"></i> Thanh Toán & Trả Phòng Trực Tiếp
+                        </button>
+                    </div>`;
+            } else {
+                html += `<p class="text-success fw-bold text-center my-3"><i class="bi bi-check-circle"></i> Phòng hiện tại đang trống và sẵn sàng đón khách.</p>`;
+            }
+            document.getElementById('modalGanttBody').innerHTML = html;
+        }
+    });
+}
+
+function lapHoaDonGantt(maPhong) {
+    document.getElementById('modalGanttBody').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-danger"></div><p class="mt-2 text-muted">Đang lập hóa đơn...</p></div>';
+
+    fetch(`/api/invoice/${maPhong}`)
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === "success") {
+            let html = `
+                <div class="border p-3 rounded mb-3 bg-light">
+                    <h5><b>Mã Hóa Đơn:</b> <span class="text-primary">${res.ma_hd}</span></h5>
+                    <p class="mb-1"><b>Khách hàng:</b> ${res.ten_khach} (CCCD: ${res.cccd})</p>
+                    <p class="mb-1"><b>Phòng:</b> ${res.ma_phong} | <b>Thời gian:</b> ${res.ngay_in} đến ${res.ngay_out} (${res.so_ngay} Ngày)</p>
+                    <p class="mb-0"><b>Tiền phòng:</b> ${res.tien_phong.toLocaleString()} VNĐ</p>
+                </div>
+
+                <h6 class="fw-bold">Chi tiết dịch vụ:</h6>
+                <table class="table table-sm table-bordered text-center">
+                    <thead class="table-secondary">
+                        <tr><th>Dịch vụ</th><th>Đơn giá</th><th>Số lượng</th><th>Thành tiền</th></tr>
+                    </thead>
+                    <tbody>`;
+            
+            if(res.dich_vu.length === 0) {
+                html += `<tr><td colspan="4" class="text-muted">Không có dịch vụ thêm.</td></tr>`;
+            } else {
+                res.dich_vu.forEach(dv => {
+                    html += `<tr>
+                        <td>${dv.ten_dv}</td>
+                        <td>${dv.gia_dv.toLocaleString()} VNĐ</td>
+                        <td>${dv.so_luong}</td>
+                        <td>${(dv.gia_dv * dv.so_luong).toLocaleString()} VNĐ</td>
+                    </tr>`;
+                });
+            }
+
+            html += `</tbody></table>
+                <div class="text-end text-danger fs-4 fw-bold my-3">TỔNG THÀNH TIỀN: ${res.tong_tien.toLocaleString()} VNĐ</div>
+
+                <hr>
+                <h6 class="fw-bold">Ghi Nhận Phương Thức Thanh Toán:</h6>
+                <div class="row text-center g-2 mt-2">
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary w-100 py-2" onclick="document.getElementById('qrGantt').classList.remove('d-none')">
+                            <i class="bi bi-qr-code-scan"></i> Chuyển Khoản QR
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-success w-100 py-2" onclick="xacNhanPayGantt('${res.ma_phong}', 'Thẻ tín dụng (POS)')">
+                            <i class="bi bi-credit-card"></i> Quẹt Thẻ POS
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-dark w-100 py-2" onclick="xacNhanPayGantt('${res.ma_phong}', 'Tiền mặt')">
+                            <i class="bi bi-cash-stack"></i> Tiền Mặt
+                        </button>
+                    </div>
+                </div>
+
+                <div id="qrGantt" class="text-center mt-3 d-none border p-3 rounded bg-white">
+                    <h6 class="text-success fw-bold">Quét mã QR VietinBank SePay</h6>
+                    <img src="${res.qr_url}" style="max-width: 200px;" class="img-thumbnail">
+                    <p class="mt-2 mb-0 text-muted">Nội dung chuyển khoản: <b class="text-dark">${res.noi_dung_ck}</b></p>
+                </div>`;
+            
+            document.getElementById('modalGanttBody').innerHTML = html;
+        }
+    });
+}
+
+function xacNhanPayGantt(maPhong, phuongThuc) {
+    if(!confirm(`Xác nhận thanh toán trực tiếp bằng phương thức: ${phuongThuc}?`)) return;
+
+    fetch('/api/thanh-toan-xac-nhan', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ma_phong: maPhong, phuong_thuc: phuongThuc})
+    })
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === "success") {
+            alert("✅ Thanh toán trực tiếp thành công!");
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

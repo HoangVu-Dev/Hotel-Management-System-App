@@ -1,0 +1,129 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-primary fw-bold"><i class="bi bi-journal-check"></i> QUẢN LÝ ĐẶT PHÒNG</h3>
+    <button class="btn btn-success fw-bold" onclick="moModalDatPhong()"><i class="bi bi-key-fill"></i> Đặt Phòng Mới</button>
+</div>
+
+<table class="table table-bordered table-hover align-middle text-center bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Mã Phòng</th>
+            <th>Tên Khách Hàng</th>
+            <th>CCCD / CMND</th>
+            <th>Số Ngày Thuê</th>
+            <th>Hành Động (CRUD)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pt in danh_sach_phieu %}
+        <tr>
+            <td class="fw-bold">{{ pt.phong.ma_phong }}</td>
+            <td>{{ pt.khach_hang.ten }}</td>
+            <td>{{ pt.khach_hang.cccd }}</td>
+            <td>{{ pt.so_ngay }} Ngày</td>
+            <td>
+                <button class="btn btn-sm btn-warning text-white me-1" 
+                        onclick="moModalSuaDatPhong('{{ pt.phong.ma_phong }}', '{{ pt.khach_hang.ten }}', '{{ pt.khach_hang.cccd }}', '{{ pt.so_ngay }}')">
+                    <i class="bi bi-pencil-square"></i> Sửa
+                </button>
+                <form action="/dat-phong/xoa/{{ pt.phong.ma_phong }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn hủy phiếu thuê này?')">
+                        <i class="bi bi-trash"></i> Hủy Phiếu
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="py-3 text-muted">Hiện tại chưa có phiếu đặt phòng nào.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal Thêm/Sửa Đặt Phòng -->
+<div class="modal fade" id="modalDatPhong" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formDatPhong" action="/dat-phong/them" method="POST">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title" id="titleModalDatPhong">Đặt Phòng Mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3" id="block_select_phong">
+                <label class="form-label">Chọn Phòng Trống</label>
+                <select name="ma_phong" id="dp_ma" class="form-select">
+                    {% for p in phong_trong %}
+                        <option value="{{ p.ma_phong }}">{{ p.ma_phong }} - {{ p.ten_phong }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Mã khách hàng</label>
+                <input type="text" name="ma_khach" id="dp_makhach" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Tên khách hàng</label>
+                <input type="text" name="ten_khach" id="dp_tenkhach" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Số CCCD/CMND</label>
+                <input type="text" name="cccd" id="dp_cccd" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Số ngày thuê</label>
+                <input type="number" name="so_ngay" id="dp_songay" class="form-control" min="1" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Xác Nhận</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let modalDatPhong = new bootstrap.Modal(document.getElementById('modalDatPhong'));
+
+function moModalDatPhong() {
+    document.getElementById("formDatPhong").action = "/dat-phong/them";
+    document.getElementById("titleModalDatPhong").innerText = "Đặt Phòng Mới";
+    document.getElementById("block_select_phong").style.display = "block";
+    
+    document.getElementById("dp_makhach").value = "";
+    document.getElementById("dp_makhach").readOnly = false;
+    document.getElementById("dp_tenkhach").value = "";
+    document.getElementById("dp_cccd").value = "";
+    document.getElementById("dp_songay").value = "";
+    
+    let hiddenInput = document.getElementById("hidden_ma_phong");
+    if (hiddenInput) hiddenInput.remove();
+    
+    modalDatPhong.show();
+}
+
+function moModalSuaDatPhong(maPhong, tenKhach, cccd, soNgay) {
+    document.getElementById("formDatPhong").action = "/dat-phong/sua";
+    document.getElementById("titleModalDatPhong").innerText = "Cập Nhật Phiếu Đặt Phòng " + maPhong;
+    document.getElementById("block_select_phong").style.display = "none";
+    
+    let hiddenInput = document.getElementById("hidden_ma_phong");
+    if(!hiddenInput) {
+        hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.name = "ma_phong";
+        hiddenInput.id = "hidden_ma_phong";
+        document.getElementById("formDatPhong").appendChild(hiddenInput);
+    }
+    hiddenInput.value = maPhong;
+
+    document.getElementById("dp_tenkhach").value = tenKhach;
+    document.getElementById("dp_cccd").value = cccd;
+    document.getElementById("dp_songay").value = soNgay;
+    modalDatPhong.show();
+}
+</script>
+{% endblock %}

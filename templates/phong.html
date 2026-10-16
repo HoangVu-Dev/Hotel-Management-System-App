@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-primary fw-bold"><i class="bi bi-door-closed"></i> QUẢN LÝ DANH SÁCH PHÒNG</h3>
+    <button class="btn btn-primary fw-bold" onclick="moModalThemPhong()"><i class="bi bi-plus-circle"></i> Thêm Phòng Mới</button>
+</div>
+
+<table class="table table-bordered table-hover align-middle text-center bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Mã Phòng</th>
+            <th>Tên Phòng</th>
+            <th>Mã Loại Phòng</th>
+            <th>Giá Cơ Bản</th>
+            <th>Phụ Phí</th>
+            <th>Trạng Thái</th>
+            <th>Hành Động</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in danh_sach_phong %}
+        <tr>
+            <td class="fw-bold fs-6">{{ p.ma_phong }}</td>
+            <td>{{ p.ten_phong }}</td>
+            <td><span class="badge bg-secondary">{{ p.ma_loai }}</span></td>
+            <td>{{ "{:,.0f}".format(p.gia_co_ban) }} VNĐ</td>
+            <td>{{ "{:,.0f}".format(p.phi_don_dep + p.phi_minibar) }} VNĐ</td>
+            <td>
+                <span class="badge {% if p.trang_thai == 'Trống' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ p.trang_thai }}
+                </span>
+            </td>
+            <td>
+                <form action="/phong/xoa/{{ p.ma_phong }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa phòng này?')">
+                        <i class="bi bi-trash"></i> Xóa
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal Pop-up Thêm Phòng -->
+<div class="modal fade" id="modalPhong" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/phong/them" method="POST">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Thêm Phòng Mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Mã phòng (ví dụ: P101, P201)</label>
+                <input type="text" name="ma_phong" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Tên phòng</label>
+                <input type="text" name="ten_phong" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Chọn Loại Phòng (Tự động áp dụng giá chuẩn)</label>
+                <select name="ma_loai" class="form-select" required>
+                    {% for lp in danh_sach_loai %}
+                        <option value="{{ lp.ma_loai }}">
+                            {{ lp.ten_loai }} - Giá: {{ "{:,.0f}".format(lp.gia_co_ban) }} VNĐ (Phụ phí: {{ "{:,.0f}".format(lp.phi_don_dep + lp.phi_minibar) }} VNĐ)
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Xác Nhận Thêm Phòng</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let modalPhong = new bootstrap.Modal(document.getElementById('modalPhong'));
+function moModalThemPhong() { modalPhong.show(); }
+</script>
+{% endblock %}
