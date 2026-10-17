@@ -100,12 +100,7 @@
                 <!-- Thư mục chứa các chức năng dạng hàng ngang -->
                 <div class="nav-scroll-container flex-grow-1" id="navScrollBox">
                     <ul class="nav flex-nowrap align-items-center mb-0 p-0">
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/' %}active-item{% endif %}" href="/">🗺️ Sơ Đồ Phòng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/so-do-gantt' %}active-item{% endif %}" href="/so-do-gantt">📈 Sơ Đồ Gantt</a>
-                        </li>
+                        <!-- CÁC CHỨC NĂNG ĐƯỢC ĐƯA RA ĐẦU LAYOUT -->
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == '/loai-phong' %}active-item{% endif %}" href="/loai-phong">🏷️ Loại Phòng</a>
                         </li>
@@ -113,19 +108,30 @@
                             <a class="nav-link {% if request.path == '/phong' %}active-item{% endif %}" href="/phong">🛏️ Quản Lý Phòng</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/dich-vu' %}active-item{% endif %}" href="/dich-vu">🛠️ Dịch Vụ Mẫu</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link {% if request.path == '/hientai-datphong' %}active-item{% endif %}" href="/hientai-datphong">🔑 Đặt Phòng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/hientai-sudung-dv' %}active-item{% endif %}" href="/hientai-sudung-dv">🛒 Khách Dùng DV</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-danger fw-bold {% if request.path == '/tra-phong' %}active-item{% endif %}" href="/tra-phong">💳 Trả Phòng</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/bao-cao' %}active-item{% endif %}" href="/bao-cao">📊 Báo Cáo</a>
+                        </li>
 
-                        <!-- CÁC TRANG LỊCH SỬ ĐƯỢC ĐẶT NẰM NGANG TRỰC TIẾP (KHÔNG DÙNG DROPDOWN NÊN KHÔNG BỊ MẤT) -->
+                        <!-- CÁC CHỨC NĂNG CÒN LẠI -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/' %}active-item{% endif %}" href="/">🗺️ Sơ Đồ Phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/so-do-gantt' %}active-item{% endif %}" href="/so-do-gantt">📈 Sơ Đồ Gantt</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/dich-vu' %}active-item{% endif %}" href="/dich-vu">🛠️ Dịch Vụ Mẫu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/hientai-sudung-dv' %}active-item{% endif %}" href="/hientai-sudung-dv">🛒 Khách Dùng DV</a>
+                        </li>
+
+                        <!-- CÁC TRANG TRA CỨU LỊCH SỬ -->
                         <li class="nav-item">
                             <a class="nav-link text-info {% if request.path == '/ls-datphong' %}active-item{% endif %}" href="/ls-datphong">📋 LS Đặt Phòng</a>
                         </li>
@@ -134,10 +140,6 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-info {% if request.path == '/ls-hoadon' %}active-item{% endif %}" href="/ls-hoadon">🧾 LS Hóa Đơn</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/bao-cao' %}active-item{% endif %}" href="/bao-cao">📊 Báo Cáo</a>
                         </li>
                     </ul>
                 </div>
@@ -186,7 +188,6 @@
             const container = document.getElementById('navScrollBox');
             const activeItem = container.querySelector('.active-item');
             if (activeItem && container) {
-                // Tính toán vị trí căn giữa nút active ngay tức thì khi load trang
                 const itemLeft = activeItem.offsetLeft;
                 const itemWidth = activeItem.offsetWidth;
                 const containerWidth = container.offsetWidth;
