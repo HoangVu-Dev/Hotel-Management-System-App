@@ -4,7 +4,7 @@ from file_handler import save_data, load_data
 
 BANK_ACC = "100871471728"
 BANK_NAME = "VietinBank"
-PREFIX_SEPAY = "HOTEL"
+PREFIX_SEPAY = "SEVQR HOTEL"
 
 class QuanLyKhachSan:
     def __init__(self):
