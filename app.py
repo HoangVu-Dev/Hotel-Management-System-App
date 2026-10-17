@@ -296,7 +296,9 @@ def webhook_sepay():
     data = request.json
     if not data: return jsonify({"status": "error"}), 400
     content = data.get("content", "").upper().strip()
-    if "SEVQR" in content and "HOTEL_ABC" in content:
+    
+    # Kiểm tra nội dung chứa HOTEL hoặc mã HD
+    if "HOTEL" in content or "HD" in content:
         for phieu in list(qlks.danh_sach_phieu):
             if phieu.trang_thai_pay == "Chưa thanh toán":
                 qlks.xac_nhan_thanh_toan(phieu.phong.ma_phong, phuong_thuc="Chuyển khoản VietinBank (SePay Auto)")
