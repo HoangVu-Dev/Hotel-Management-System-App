@@ -294,26 +294,25 @@ def api_thanh_toan_xac_nhan():
 @app.route("/webhook/sepay", methods=["POST"])
 def webhook_sepay():
     data = request.json
-    if not data: 
-        return jsonify({"status": "error", "message": "No payload"}), 400
-    
-    # Lấy nội dung giao dịch từ SePay
+    if not data:
+        return jsonify({"status": "error", "message": "Không có dữ liệu"}), 400
+
+    # Lấy mã thanh toán bóc tách từ SePay (vd: HD1792214110) hoặc trong nội dung
     code = str(data.get("code", "")).upper().strip()
     content = str(data.get("content", "")).upper().strip()
-    
-    # Chỉ cần trong nội dung hoặc mã có chứa "HD" hoặc "HOTEL" hoặc "SEVQR"
-    if "HD" in code or "HD" in content or "HOTEL" in content or "SEVQR" in content:
-        # Tự động gạch nợ phiếu thuê chưa thanh toán
+
+    # Nhận diện nếu có HD hoặc HOTEL
+    if "HD" in code or "HD" in content or "HOTEL" in content:
+        # Tự động duyệt thanh toán cho tất cả các phiếu đang chờ
         for phieu in list(qlks.danh_sach_phieu):
             if phieu.trang_thai_pay == "Chưa thanh toán":
-                ok, msg, hd = qlks.xac_nhan_thanh_toan(
-                    phieu.phong.ma_phong, 
+                qlks.xac_nhan_thanh_toan(
+                    phieu.phong.ma_phong,
                     phuong_thuc="Chuyển khoản VietinBank (SePay Auto)"
                 )
-                if ok:
-                    return jsonify({"status": "success", "message": "Gach no thành công!"}), 200
-                
-    return jsonify({"status": "ignored", "message": "Chua tim thay phieu"}), 200
+        return jsonify({"status": "success", "message": "Gạch nợ thành công!"}), 200
+
+    return jsonify({"status": "ignored"}), 200
 # API kiểm tra trạng thái thanh toán realtime cho giao diện Web
 @app.route("/api/check-payment-status/<ma_phong>")
 def api_check_payment_status(ma_phong):
