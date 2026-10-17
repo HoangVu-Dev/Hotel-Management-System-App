@@ -202,8 +202,17 @@ class QuanLyKhachSan:
         return False, "Không tìm thấy bản ghi dịch vụ!"
 
     def tao_qr_sepay(self, ma_hd, tong_tien):
+        import urllib.parse
+        
+        # Cú pháp nội dung chuyển khoản bắt buộc có tiền tố SEVQR HOTEL_ABC
         noi_dung_ck = f"{PREFIX_SEPAY} {ma_hd}"
-        qr_url = f"https://qr.sepay.vn/img?bank={BANK_NAME}&acc={BANK_ACC}&amount={int(tong_tien)}&des={noi_dung_ck}"
+        
+        # Encode nội dung để chuyển khoảng trắng thành %20 giúp URL VietQR nhận chuẩn 100%
+        noi_dung_encoded = urllib.parse.quote(noi_dung_ck)
+        
+        # Link sinh mã QR VietQR chuẩn SePay
+        qr_url = f"https://qr.sepay.vn/img?bank={BANK_NAME}&acc={BANK_ACC}&amount={int(tong_tien)}&des={noi_dung_encoded}"
+        
         return qr_url, noi_dung_ck
 
     def xac_nhan_thanh_toan(self, ma_phong, phuong_thuc="Chuyển khoản VietinBank (SePay Auto)"):

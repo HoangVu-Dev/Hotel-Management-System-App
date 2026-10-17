@@ -302,7 +302,18 @@ def webhook_sepay():
                 qlks.xac_nhan_thanh_toan(phieu.phong.ma_phong, phuong_thuc="Chuyển khoản VietinBank (SePay Auto)")
                 return jsonify({"status": "success"})
     return jsonify({"status": "ignored"})
-
+# API kiểm tra trạng thái thanh toán realtime cho giao diện Web
+@app.route("/api/check-payment-status/<ma_phong>")
+def api_check_payment_status(ma_phong):
+    # Tìm phiếu thuê của phòng này
+    phieu = qlks.tim_phieu_hien_tai(ma_phong)
+    
+    # Nếu không còn phiếu chưa thanh toán (tức SePay đã gạch nợ thành công) -> Trả về paid: True
+    if not phieu:
+        return jsonify({"paid": True})
+    
+    # Nếu vẫn còn phiếu chưa thanh toán -> Trả về paid: False
+    return jsonify({"paid": False})
 # --- 9. TRA CỨU LỊCH SỬ ---
 @app.route("/ls-datphong")
 @login_required

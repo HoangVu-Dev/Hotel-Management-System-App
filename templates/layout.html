@@ -8,75 +8,156 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Tối ưu hiệu ứng phát sáng cho nút đang active trên Navbar */
-        .nav-link.active-item {
+        /* Đảm bảo Navbar luôn cố định ở top */
+        .custom-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            background-color: #212529;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Container chứa các nút menu có khả năng cuộn ngang */
+        .nav-scroll-container {
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            white-space: nowrap;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        /* Ẩn thanh cuộn mặc định của trình duyệt cho đẹp mắt */
+        .nav-scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Tối ưu style cho các nút menu */
+        .nav-scroll-container .nav-link {
+            display: inline-block;
+            white-space: nowrap;
+            padding: 8px 14px !important;
+            margin: 0 2px;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.92rem;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Nút đang được chọn phát sáng rực rỡ */
+        .nav-scroll-container .nav-link.active-item {
             background-color: #0d6efd !important;
             color: #ffffff !important;
             font-weight: bold !important;
             border-radius: 6px;
-            box-shadow: 0px 2px 6px rgba(13, 110, 253, 0.4);
+            box-shadow: 0px 2px 8px rgba(13, 110, 253, 0.5);
         }
-        .nav-link:hover {
+
+        .nav-scroll-container .nav-link:hover {
             color: #ffc107 !important;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 6px;
+        }
+
+        /* Nút mũi tên chuyển hướng < và > */
+        .scroll-btn {
+            background-color: #343a40;
+            color: #ffc107;
+            border: 1px solid #495057;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            z-index: 10;
+            transition: all 0.2s;
+        }
+
+        .scroll-btn:hover {
+            background-color: #ffc107;
+            color: #212529;
         }
     </style>
 </head>
 <body class="bg-light">
-    <!-- Navbar Navigation Cân Đối -->
-    <nav class="navbar navbar-expand-xl navbar-dark bg-dark shadow-sm">
-        <div class="container-fluid px-3">
-            <a class="navbar-brand fw-bold text-warning fs-5 me-3" href="/">🏨 KHÁCH SẠN SYSTEM</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-center gap-1">
-                    <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.path == '/' %}active-item{% endif %}" href="/">🗺️ Sơ Đồ Phòng</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.path == '/so-do-gantt' %}active-item{% endif %}" href="/so-do-gantt">📈 Sơ Đồ Gantt</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.path == '/loai-phong' %}active-item{% endif %}" href="/loai-phong">🏷️ Loại Phòng</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.path == '/phong' %}active-item{% endif %}" href="/phong">🛏️ Quản Lý Phòng</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.path == '/dich-vu' %}active-item{% endif %}" href="/dich-vu">🛠️ Dịch Vụ Mẫu</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.path == '/hientai-datphong' %}active-item{% endif %}" href="/hientai-datphong">🔑 Đặt Phòng</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.path == '/hientai-sudung-dv' %}active-item{% endif %}" href="/hientai-sudung-dv">🛒 Khách Dùng DV</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2 text-danger fw-bold {% if request.path == '/tra-phong' %}active-item{% endif %}" href="/tra-phong">💳 Trả Phòng</a>
-                    </li>
+    <!-- Navbar Cố Định Trên Cùng Nằm Ngang -->
+    <nav class="navbar navbar-dark custom-navbar py-2">
+        <div class="container-fluid px-3 d-flex align-items-center justify-content-between flex-nowrap">
+            
+            <!-- 1. Logo Thương Hiệu -->
+            <a class="navbar-brand fw-bold text-warning fs-5 me-3 flex-shrink-0" href="/">
+                🏨 KHÁCH SẠN SYSTEM
+            </a>
 
-                    <!-- DROPDOWN TRA CỨU LỊCH SỬ -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-info fw-bold px-2 {% if request.path.startswith('/ls-') %}active-item{% endif %}" href="#" data-bs-toggle="dropdown">📂 LỊCH SỬ</a>
-                        <ul class="dropdown-menu shadow">
-                            <li><a class="dropdown-item {% if request.path == '/ls-datphong' %}fw-bold text-primary{% endif %}" href="/ls-datphong">📋 Lịch Sử Đặt Phòng</a></li>
-                            <li><a class="dropdown-item {% if request.path == '/ls-sudung-dv' %}fw-bold text-primary{% endif %}" href="/ls-sudung-dv">🛒 Lịch Sử Dùng Dịch Vụ</a></li>
-                            <li><a class="dropdown-item {% if request.path == '/ls-hoadon' %}fw-bold text-primary{% endif %}" href="/ls-hoadon">🧾 Lịch Sử Hóa Đơn</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.path == '/bao-cao' %}active-item{% endif %}" href="/bao-cao">📊 Báo Cáo</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center ms-auto">
-                    <span class="text-white me-3"><i class="bi bi-person-circle"></i> admin</span>
-                    <a href="/logout" class="btn btn-outline-danger btn-sm fw-bold"><i class="bi bi-box-arrow-right"></i> Thoát</a>
+            <!-- 2. Thanh Menu Ngang Có Mũi Tên Cuộn Qua Lại -->
+            <div class="d-flex align-items-center overflow-hidden mx-2 flex-grow-1">
+                <!-- Nút Cuộn Trái < -->
+                <button class="scroll-btn me-1" id="btnScrollLeft" title="Cuộn sang trái" onclick="scrollNav(-200)">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+
+                <!-- Thư mục chứa các chức năng dạng hàng ngang -->
+                <div class="nav-scroll-container flex-grow-1" id="navScrollBox">
+                    <ul class="nav flex-nowrap align-items-center mb-0 p-0">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/' %}active-item{% endif %}" href="/">🗺️ Sơ Đồ Phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/so-do-gantt' %}active-item{% endif %}" href="/so-do-gantt">📈 Sơ Đồ Gantt</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/loai-phong' %}active-item{% endif %}" href="/loai-phong">🏷️ Loại Phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/phong' %}active-item{% endif %}" href="/phong">🛏️ Quản Lý Phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/dich-vu' %}active-item{% endif %}" href="/dich-vu">🛠️ Dịch Vụ Mẫu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/hientai-datphong' %}active-item{% endif %}" href="/hientai-datphong">🔑 Đặt Phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/hientai-sudung-dv' %}active-item{% endif %}" href="/hientai-sudung-dv">🛒 Khách Dùng DV</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger fw-bold {% if request.path == '/tra-phong' %}active-item{% endif %}" href="/tra-phong">💳 Trả Phòng</a>
+                        </li>
+
+                        <!-- Dropdown Tra Cứu Lịch Sử -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-info fw-bold {% if request.path.startswith('/ls-') %}active-item{% endif %}" href="#" data-bs-toggle="dropdown">📂 LỊCH SỬ</a>
+                            <ul class="dropdown-menu dropdown-menu-dark shadow">
+                                <li><a class="dropdown-item {% if request.path == '/ls-datphong' %}active fw-bold{% endif %}" href="/ls-datphong">📋 Lịch Sử Đặt Phòng</a></li>
+                                <li><a class="dropdown-item {% if request.path == '/ls-sudung-dv' %}active fw-bold{% endif %}" href="/ls-sudung-dv">🛒 Lịch Sử Sử Dụng DV</a></li>
+                                <li><a class="dropdown-item {% if request.path == '/ls-hoadon' %}active fw-bold{% endif %}" href="/ls-hoadon">🧾 Lịch Sử Hóa Đơn</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/bao-cao' %}active-item{% endif %}" href="/bao-cao">📊 Báo Cáo</a>
+                        </li>
+                    </ul>
                 </div>
+
+                <!-- Nút Cuộn Phải > -->
+                <button class="scroll-btn ms-1" id="btnScrollRight" title="Cuộn sang phải" onclick="scrollNav(200)">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
+
+            <!-- 3. Khung Người Dùng & Nút Thoát -->
+            <div class="d-flex align-items-center ms-2 flex-shrink-0">
+                <span class="text-white me-2 d-none d-sm-inline"><i class="bi bi-person-circle"></i> admin</span>
+                <a href="/logout" class="btn btn-outline-danger btn-sm fw-bold px-2 py-1"><i class="bi bi-box-arrow-right"></i> Thoát</a>
+            </div>
+
         </div>
     </nav>
 
+    <!-- Nội dung chính của các trang -->
     <div class="container-fluid px-4 py-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -93,6 +174,21 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Hàm cuộn ngang thanh menu khi nhấn nút < hoặc >
+        function scrollNav(amount) {
+            const container = document.getElementById('navScrollBox');
+            container.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        // Tự động cuộn đến nút đang Active khi tải trang
+        window.addEventListener('DOMContentLoaded', () => {
+            const activeItem = document.querySelector('.nav-scroll-container .active-item');
+            if (activeItem) {
+                activeItem.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
